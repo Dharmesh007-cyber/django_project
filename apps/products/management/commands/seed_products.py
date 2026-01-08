@@ -2,7 +2,7 @@ from django.core.management.base import BaseCommand
 from faker import Faker
 import random
 
-from apps.products.models import Product
+from apps.products.models import Product, Category
 
 fake = Faker()
 
@@ -20,6 +20,15 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         count = options["count"]
 
+        # Make sure categories exist
+        categories = list(Category.objects.all())
+
+        if not categories:
+            self.stdout.write(
+                self.style.ERROR("❌ No categories found. Create categories first.")
+            )
+            return
+
         Product.objects.all().delete()
 
         products = []
@@ -27,9 +36,9 @@ class Command(BaseCommand):
         for _ in range(count):
             products.append(
                 Product(
+                    category=random.choice(categories),   # ✅ REQUIRED
                     name=fake.word().capitalize(),
                     price=random.randint(500, 100000),
-                    stock=random.randint(0, 50),
                     is_active=random.choice([True, False])
                 )
             )
